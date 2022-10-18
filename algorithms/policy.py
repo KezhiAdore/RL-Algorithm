@@ -1,7 +1,9 @@
 import copy
+from datetime import datetime
 import numpy as np
-import torch
-from torch import nn
+from torch import nn, optim
+from torch.utils.tensorboard.writer import SummaryWriter
+from tianshou.data.buffer.base import ReplayBuffer
 
 
 class Policy:
@@ -33,6 +35,18 @@ class Policy:
         """
         return NotImplemented()
 
+    def choose_action(self, state, legal_action_mask=None):
+        """ Return the chosen action by the policy
+
+        Args:
+            state: A game state
+            legal_action_mask (_type_, optional): A list show whether an action legal of all actions
+            if None, all actions are legal
+        Returns:
+            index of action
+        """
+        return NotImplemented()
+
     def __call__(self, state, legal_action_mask=None):
         """Turns the policy into a callable
         Args:
@@ -41,10 +55,39 @@ class Policy:
         Returns:
             A `dict` of `{action:probability}` for the giving game state
         """
-        return self.action_probabilities(state, legal_action_mask)
+        return self.choose_action(state, legal_action_mask)
 
 
-class TabularPolicy(Policy):
+class RandomPolicy(Policy):
+
+    def __init__(self, player_id, num_actions):
+        super(RandomPolicy, self).__init__(player_id, num_actions)
+
+    def action_probabilities(self, state, legal_action_mask=None):
+        """
+
+        Args:
+            state:
+            legal_action_mask:
+
+        Returns:
+            Uniform random policy, contain all legal actions, each with the same probability
+        """
+        if legal_action_mask is None:
+            legal_action_mask = [1 for _ in range(self._num_actions)]
+
+        if np.sum(legal_action_mask) == 0:
+            return {action: 0 for action in range(self._num_actions)}
+
+        action_probs = np.array(legal_action_mask / np.sum(legal_action_mask))
+        return {action: action_probs[action] for action in range(self._num_actions)}
+
+    def choose_action(self, state, legal_action_mask=None):
+        action_probs = self.action_probabilities(state, legal_action_mask)
+        return np.random.choice(list(action_probs.keys()), p=list(action_probs.values()))
+
+
+class TabularPolicy(RandomPolicy):
     """Tabular policy
 
     Tabular policy use a table to store the probability of choosing an action given a state of the game
@@ -84,10 +127,13 @@ class TabularPolicy(Policy):
             if np.sum(action_probs) > 0:
                 action_probs /= np.sum(action_probs)
             else:
-                action_probs = np.array(legal_action_mask / np.sum(legal_action_mask))
+                action_probs = np.array(
+                    legal_action_mask / np.sum(legal_action_mask))
         else:
-            action_probs = np.array(legal_action_mask / np.sum(legal_action_mask))
-            self.set_action_probabilities(state, action_probs, legal_action_mask)
+            action_probs = np.array(
+                legal_action_mask / np.sum(legal_action_mask))
+            self.set_action_probabilities(
+                state, action_probs, legal_action_mask)
 
         return {action: action_probs[action] for action in range(self._num_actions)}
 
@@ -110,60 +156,46 @@ class TabularPolicy(Policy):
         return repr(state)
 
 
-class RandomPolicy(Policy):
-
-    def __init__(self, player_id, num_actions):
-        super(RandomPolicy, self).__init__(player_id, num_actions)
-
-    def action_probabilities(self, state, legal_action_mask=None):
-        """
-
-        Args:
-            state:
-            legal_action_mask:
-
-        Returns:
-            Uniform random policy, contain all legal actions, each with the same probability
-        """
-        if legal_action_mask is None:
-            legal_action_mask = [1 for _ in range(self._num_actions)]
-
-        if np.sum(legal_action_mask) == 0:
-            return {action: 0 for action in range(self._num_actions)}
-
-        action_probs = np.array(legal_action_mask / np.sum(legal_action_mask))
-        return {action: action_probs[action] for action in range(self._num_actions)}
-
-
-class NetPolicy(Policy):
+class NetPolicy(RandomPolicy):
     """
         A policy implemented by neural network, the action probs could be computing by the neural network, and the policy
         could be optimized by updating the parameters of the neural network
     """
 
-    def __init__(self, player_id, num_actions, network: nn.Module):
+    def __init__(self,
+                 player_id,
+                 num_actions: int,
+                 network: nn.Module,
+                 optimizer: optim.Optimizer,
+                 buffer_size: int,
+                 ):
         super(NetPolicy, self).__init__(player_id, num_actions)
-        self._network = copy.deepcopy(network)
-
-    def action_probabilities(self, state, legal_action_mask=None):
-        if legal_action_mask is None:
-            legal_action_mask = [1 for _ in range(self._num_actions)]
-
-        if np.sum(legal_action_mask) == 0:
-            return {action: 0 for action in range(self._num_actions)}
-
-        state = torch.FloatTensor(state).to(self.device)
-        action_probs = self._network(state).detach().numpy()
-        action_probs *= legal_action_mask
-        action_probs /= np.sum(action_probs)
-
-        return {action: action_probs[action].item() for action in range(self._num_actions)}
+        self._network = network
+        self._optimizer = optimizer
+        self._train = False
+        self._buffer = ReplayBuffer(buffer_size)
+        
+        now=datetime.now()
+        self.writer=SummaryWriter(f"./logs/{now.day}_{now.hour}_{now.minute}")
+    
+    def choose_action(self, state, legal_action_mask=None):
+        action_probs = self.action_probabilities(state, legal_action_mask)
+        actions=list(action_probs.keys())
+        probs=np.array(list(action_probs.values()))
+        action=np.random.choice(actions,p=probs)
+        return action
 
     def copy_network(self):
         return copy.deepcopy(self._network)
 
-    def update_network(self, state_dict):
-        self._network.load_state_dict(state_dict)
+    def train_mode(self):
+        self._train = True
+
+    def eval_mode(self):
+        self._train = False
+        
+    def clear_buffer(self):
+        self._buffer.reset()        
 
     @property
     def network(self):
@@ -172,3 +204,8 @@ class NetPolicy(Policy):
     @property
     def device(self):
         return next(self._network.parameters()).device
+
+    @property
+    def optimizer(self):
+        return self._optimizer
+    

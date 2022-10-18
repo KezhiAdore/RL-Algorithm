@@ -1,4 +1,5 @@
 from torch import nn
+import torch.nn.functional as F
 
 
 class MLP(nn.Module):
@@ -28,4 +29,5 @@ class MLP(nn.Module):
         out = input
         for layer in self._layers:
             out = layer(out)
+        out=F.softmax(out)
         return out
