@@ -1,0 +1,6 @@
+gym
+gym[classic_control]
+torch
+numpy
+tensorboard
+tianshou
