@@ -25,9 +25,8 @@ class MLP(nn.Module):
         # transfer list to module list
         self._layers = nn.ModuleList(self._layers)
 
-    def forward(self, input):
-        out = input
+    def forward(self, x):
+        out = x
         for layer in self._layers:
             out = layer(out)
-        out=F.softmax(out)
         return out
