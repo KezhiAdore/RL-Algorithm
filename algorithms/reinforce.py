@@ -16,7 +16,7 @@ class ReinforceAgent(NetPolicy):
                  network: nn.Module, 
                  optimizer: optim.Optimizer,
                  buffer_size: int,
-                 gamma=0.99,
+                 gamma=0.98,
                  ):
         super().__init__(player_id, num_actions, network, optimizer, buffer_size)
         self._gamma=gamma
@@ -65,15 +65,19 @@ class ReinforceAgent(NetPolicy):
             for t in reversed(range(len(reward)-1)):
                 discount_reward[t]=reward[t]+self._gamma*discount_reward[t+1]
                 
-            discount_total_reward=torch.sum(
-                torch.tensor([self._gamma**(t-1) for t in range(len(discount_reward))])*discount_reward
-            )
+            # multiply coef
+            for t in range(len(discount_reward)):
+                discount_reward[t]*=self._gamma**t 
             
             # network forward
             action_probs=self._network(state)
             # loss=-F.cross_entropy(action_probs,action)*discount_total_reward
-            log_prob=torch.sum(action_probs*F.one_hot(action,action_probs.shape[-1]),axis=1)
-            loss=-torch.mean(log_prob*discount_reward)
+            probs=torch.sum(action_probs*F.one_hot(action,action_probs.shape[-1]),axis=1)
+            log_probs=torch.log(probs)
+            loss=-torch.sum(log_probs*discount_reward)
+            
+            # gradient boosting
+            self._optimizer.zero_grad()
             loss.backward()
             self._optimizer.step()
             
