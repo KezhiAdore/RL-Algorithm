@@ -62,8 +62,11 @@ class RandomPolicy(Policy):
 
     def __init__(self, player_id, num_actions):
         super(RandomPolicy, self).__init__(player_id, num_actions)
-
+    
     def action_probabilities(self, state, legal_action_mask=None):
+        return self.equal_probabilities(state, legal_action_mask)
+    
+    def equal_probabilities(self, state, legal_action_mask=None):
         """
 
         Args:

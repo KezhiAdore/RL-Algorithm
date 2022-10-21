@@ -48,7 +48,7 @@ class ReinforceAgent(NetPolicy):
         })
         self._buffer.add(batch)
         
-    def update(self,episode):
+    def update(self,episode=1):
         def train(trajectory:Batch):
             """update network by a trajectory in game
 
