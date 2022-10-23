@@ -1,15 +1,13 @@
 from datetime import datetime
 import numpy as np
 import gym
-import torch
-import random
+import copy
 from gym import Env
 from torch import optim, nn
-from torch.utils.tensorboard.writer import SummaryWriter
 
 from utils.simple_nets import MLP
 from algorithms.reinforce import ReinforceAgent
-from algorithms.dqn import DQNAgent
+from algorithms.dqn import DQNAgent, DoubleDQNAgent
 
 
 class PolicyNet(nn.Module):
@@ -52,6 +50,19 @@ def run(env:Env,policy,render=True):
         step+=1
     return step
 
+def train_and_eval_agent(algo_name, agent):
+    for i in range(1000):        
+        step=run(env,agent,False)
+        print(step)
+        agent.update()
+        agent.writer.add_scalar(f"{algo_name}/train",step,i)
+    
+    agent.eval_mode()
+    for i in range(100):
+        step=run(env,agent,False)
+        print(step)
+        agent.writer.add_scalar(f"{algo_name}/test",step,i)
+
 
 if __name__=="__main__":
     
@@ -59,23 +70,23 @@ if __name__=="__main__":
     num_actions=env.action_space.n
     obs_shape=env.observation_space.shape
     
-    net=ValueNet(obs_shape[0],[64,64],num_actions)
-    optimizer=optim.SGD(net.parameters(),lr=0.001)
-
-    # agent=ReinforceAgent(0,num_actions,net,optimizer,1000)
-    agent=DQNAgent(0,num_actions,net,optimizer,100000)
+    policy_net=PolicyNet(obs_shape[0],[64,64],num_actions)
+    value_net=ValueNet(obs_shape[0],[64,64],num_actions)
     
-    # setting random seed
-    random.seed(0)
-    env.seed(0)
-    np.random.seed(0)
-    torch.manual_seed(0)
-
-    for i in range(1000):        
-        step=run(env,agent,False)
-        print(step)
-        agent.update()
-        agent.writer.add_scalar("score",step,i)
-
-    run(env,agent)
-        
+    # REINFORCE
+    # net=copy.deepcopy(policy_net)
+    # optimizer=optim.SGD(net.parameters(),lr=1e-3)
+    # agent=ReinforceAgent(0,num_actions,net,optimizer,10000)
+    # train_and_eval_agent("REINFORCE", agent)
+    
+    # DQN
+    net=copy.deepcopy(value_net)
+    optimizer=optim.SGD(net.parameters(),lr=1e-3)
+    agent=DQNAgent(0,num_actions,net,optimizer,10000)
+    train_and_eval_agent("DQN",agent)
+    
+    # Double DQN
+    net=copy.deepcopy(value_net)
+    optimizer=optim.SGD(net.parameters(),lr=1e-3)
+    agent=DQNAgent(0,num_actions,net,optimizer,10000)
+    train_and_eval_agent("Double DQN",agent)

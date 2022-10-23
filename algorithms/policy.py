@@ -193,9 +193,11 @@ class NetPolicy(RandomPolicy):
 
     def train_mode(self):
         self._train = True
+        self._network.train()
 
     def eval_mode(self):
         self._train = False
+        self._network.eval()
         
     def clear_buffer(self):
         self._buffer.reset()        
