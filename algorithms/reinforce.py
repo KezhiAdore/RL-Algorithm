@@ -5,7 +5,6 @@ from torch import optim
 from torch.nn import functional as F
 from tianshou.data.batch import Batch
 
-from utils.simple_nets import MLP
 from algorithms.policy import NetPolicy
 
 
@@ -25,7 +24,7 @@ class ReinforceAgent(NetPolicy):
         if legal_action_mask is None:
             legal_action_mask=[1 for _ in range(self._num_actions)]
         
-        state=torch.FloatTensor(state)
+        state=torch.FloatTensor(state).to(self.device)
         with torch.no_grad():
             action_probs=self._network(state).cpu().numpy()
         

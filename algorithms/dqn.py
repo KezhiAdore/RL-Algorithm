@@ -49,7 +49,7 @@ class DQNAgent(NetPolicy):
         if legal_action_mask is None:
             legal_action_mask = [1 for _ in range(self._num_actions)]
 
-        state = torch.FloatTensor(state)
+        state = torch.FloatTensor(state).to(self.device)
         with torch.no_grad():
             q_value = self._network(state).cpu().numpy()
             q_value *= legal_action_mask
@@ -95,6 +95,8 @@ class DQNAgent(NetPolicy):
         self._update_count += 1
         if self._update_count % self._target_update_interval == 0:
             self._target_network.load_state_dict(self._network.state_dict())
+        
+        return loss.item()
 
 
 class DoubleDQNAgent(DQNAgent):
@@ -146,3 +148,5 @@ class DoubleDQNAgent(DQNAgent):
         self._update_count += 1
         if self._update_count % self._target_update_interval == 0:
             self._target_network.load_state_dict(self._network.state_dict())
+        
+        return loss.item()
