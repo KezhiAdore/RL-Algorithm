@@ -1,5 +1,6 @@
 gym
 gym[classic_control]
+gym[box2d]
 torch
 numpy
 tensorboard
