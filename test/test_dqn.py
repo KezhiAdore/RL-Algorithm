@@ -33,9 +33,11 @@ class DuelingValueNet(nn.Module):
 
 if __name__=="__main__":
     ### test dqn
-    env_name = "LunarLander-v2"
-    env=gym.make(env_name)
-    reward_func = RewardFuncDict[env_name]
+    from setting import *
+    
+    set_seed(SEED)
+    env=gym.make(ENV_NAME)
+    reward_func = RewardFuncDict[ENV_NAME]
     num_actions=env.action_space.n
     obs_shape=env.observation_space.shape
     
@@ -43,30 +45,34 @@ if __name__=="__main__":
     dueling_value_net = DuelingValueNet(obs_shape[0],[64,64],num_actions)
     
     # DQN
-    set_seed(0)
-    net=copy.deepcopy(value_net).to('cuda')
-    optimizer=optim.SGD(net.parameters(),lr=1e-3)
-    agent=DQNAgent(0,num_actions,net,optimizer,10000)
-    train_eval_algo("DQN",env, agent,1000,100,5, reward_func=reward_func)
+    for _ in range(EPISODE):
+        set_seed(SEED)
+        net=copy.deepcopy(value_net).to(DEVICE)
+        optimizer=optim.SGD(net.parameters(),lr=1e-3)
+        agent=DQNAgent(0,num_actions,net,optimizer,BUFFER_SIZE)
+        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func)
     
     # Double DQN
-    set_seed(0)
-    net=copy.deepcopy(value_net)
-    optimizer=optim.SGD(net.parameters(),lr=1e-3)
-    agent=DoubleDQNAgent(0,num_actions,net,optimizer,10000)
-    train_eval_algo("Double DQN",env, agent,1000,100,5, reward_func=reward_func)
+    for _ in range(EPISODE):
+        set_seed(SEED)
+        net=copy.deepcopy(value_net).to(DEVICE)
+        optimizer=optim.SGD(net.parameters(),lr=1e-3)
+        agent=DoubleDQNAgent(0,num_actions,net,optimizer,BUFFER_SIZE)
+        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func)
     
     # Dueling DQN
-    set_seed(0)
-    net=copy.deepcopy(dueling_value_net)
-    optimizer=optim.SGD(net.parameters(),lr=1e-3)
-    agent=DQNAgent(0,num_actions,net,optimizer,10000)
-    train_eval_algo("Dueling DQN",env, agent,1000,100,5, reward_func=reward_func)
+    for _ in range(EPISODE):
+        set_seed(SEED)
+        net=copy.deepcopy(dueling_value_net).to(DEVICE)
+        optimizer=optim.SGD(net.parameters(),lr=1e-3)
+        agent=DQNAgent(0,num_actions,net,optimizer,BUFFER_SIZE,log_name="DuelingDQN")
+        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func)
     
     # Double Dueling DQN
-    set_seed(0)
-    net=copy.deepcopy(dueling_value_net)
-    optimizer=optim.SGD(net.parameters(),lr=1e-3)
-    agent=DQNAgent(0,num_actions,net,optimizer,10000)
-    train_eval_algo("Double Dueling DQN",env, agent,1000,100,5, reward_func=reward_func)
+    for _ in range(EPISODE):
+        set_seed(SEED)
+        net=copy.deepcopy(dueling_value_net).to(DEVICE)
+        optimizer=optim.SGD(net.parameters(),lr=1e-3)
+        agent=DoubleDQNAgent(0,num_actions,net,optimizer,BUFFER_SIZE,log_name="DoubleDuelingDQN")
+        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func)
     

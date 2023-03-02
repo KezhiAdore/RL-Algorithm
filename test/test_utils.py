@@ -4,6 +4,7 @@ import random
 import numpy as np
 import torch
 
+
 def set_seed(seed=0):
     if seed is None:
         return

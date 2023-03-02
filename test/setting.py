@@ -1,0 +1,10 @@
+ENV_NAME = "CartPole-v1"
+DEVICE = 'cuda'
+
+SEED = None
+
+EPISODE = 1
+TRAIN_STEP = 1000
+EVAL_STEP = 0
+
+BUFFER_SIZE = 100000
