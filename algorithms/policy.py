@@ -1,7 +1,7 @@
 import copy
 from datetime import datetime
 import numpy as np
-from torch import nn, optim
+from torch import nn, optim, Tensor
 from torch.utils.tensorboard.writer import SummaryWriter
 from tianshou.data.buffer.base import ReplayBuffer
 
@@ -171,15 +171,21 @@ class NetPolicy(RandomPolicy):
                  network: nn.Module,
                  optimizer: optim.Optimizer,
                  buffer_size: int,
+                 max_global_gradient_norm:float =None,
+                 log_name: str="",
                  ):
         super(NetPolicy, self).__init__(player_id, num_actions)
         self._network = network
         self._optimizer = optimizer
         self._train = False
         self._buffer = ReplayBuffer(buffer_size)
+        self._max_global_gradient_norm = max_global_gradient_norm
         
         now=datetime.now()
-        self.writer=SummaryWriter(f"./logs/{now.day}_{now.hour}_{now.minute}")
+        if log_name:
+            self.writer=SummaryWriter(f"./logs_{log_name}/{now.day}_{now.hour}_{now.minute}")
+        else:
+            self.writer=SummaryWriter(f"./logs/{now.day}_{now.hour}_{now.minute}")
     
     def choose_action(self, state, legal_action_mask=None):
         action_probs = self.action_probabilities(state, legal_action_mask)
@@ -187,6 +193,16 @@ class NetPolicy(RandomPolicy):
         probs=np.array(list(action_probs.values()))
         action=np.random.choice(actions,p=probs)
         return action
+    
+    def update(self):
+        return NotImplementedError()
+    
+    def minimize_with_clipping(self, net:nn.Module, optimizer:optim.Optimizer, loss:Tensor):
+        optimizer.zero_grad()
+        loss.backward()
+        if self._max_global_gradient_norm:
+            nn.utils.clip_grad_norm_(net.parameters(), self._max_global_gradient_norm)
+        optimizer.step()
 
     def copy_network(self):
         return copy.deepcopy(self._network)

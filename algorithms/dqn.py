@@ -23,6 +23,7 @@ class DQNAgent(NetPolicy):
         epsilon=0.9,
         epsilon_min=0.01,
         epsilon_decay_step=1000,
+        max_global_gradient_norm:float =None
     ):
         super().__init__(player_id, num_actions, network, optimizer,
                          buffer_size)
@@ -87,15 +88,13 @@ class DQNAgent(NetPolicy):
         q_target = reward + self._gamma * max_next_q_value
 
         loss = F.mse_loss(q_value, q_target)
-        self._optimizer.zero_grad()
-        loss.backward()
-        self._optimizer.step()
+        self.minimize_with_clipping(self._network,self._optimizer,loss)
 
         # update target network
         self._update_count += 1
         if self._update_count % self._target_update_interval == 0:
             self._target_network.load_state_dict(self._network.state_dict())
-        
+
         return loss.item()
 
 
@@ -148,5 +147,5 @@ class DoubleDQNAgent(DQNAgent):
         self._update_count += 1
         if self._update_count % self._target_update_interval == 0:
             self._target_network.load_state_dict(self._network.state_dict())
-        
+
         return loss.item()
