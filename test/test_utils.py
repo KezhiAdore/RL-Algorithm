@@ -5,6 +5,8 @@ import numpy as np
 import torch
 
 def set_seed(seed=0):
+    if seed is None:
+        return
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
@@ -21,7 +23,7 @@ def run_game(env, agent: NetPolicy, reward_func=None, render=False):
             env.render()
         action = agent.choose_action(state)
         next_state, reward, done, _, info = env.step(action)
-        if step>1000:
+        if step>200:
             done=True
         if reward_func:
             params = {
@@ -40,7 +42,7 @@ def run_game(env, agent: NetPolicy, reward_func=None, render=False):
     return step, total_reward
 
 
-def train_alog(algo_name, env, agent: NetPolicy, epi_num, epoch_per_epi, train_start_epi=0,
+def train_alog(env, agent: NetPolicy, epi_num, epoch_per_epi, train_start_epi=0,
                reward_func=None, render=False):
     train_bar = tqdm.tqdm(range(epi_num))
 
@@ -54,22 +56,22 @@ def train_alog(algo_name, env, agent: NetPolicy, epi_num, epoch_per_epi, train_s
                     loss.append(l)
             if loss:
                 loss = sum(loss)/len(loss)
-                agent.writer.add_scalar(f"{algo_name}/train/loss", loss, epi)
-        agent.writer.add_scalar(f"{algo_name}/train/reward", total_reward, epi)
-        agent.writer.add_scalar(f"{algo_name}/train/step", step, epi)
+                agent.writer.add_scalar(f"train/loss", loss, epi)
+        agent.writer.add_scalar(f"train/reward", total_reward, epi)
+        agent.writer.add_scalar(f"train/step", step, epi)
         
         train_bar.set_description("r: %.2f"%total_reward)
 
 
-def eval_alog(algo_name, env, agent: NetPolicy, epi_num, reward_func=None, render=True):
+def eval_alog(env, agent: NetPolicy, epi_num, reward_func=None, render=True):
     for epi in range(epi_num):
         step, total_reward = run_game(env, agent, reward_func, render)
-        agent.writer.add_scalar(f"{algo_name}/eval/reward", total_reward, epi)
-        agent.writer.add_scalar(f"{algo_name}/eval/step", step, epi)
+        agent.writer.add_scalar(f"eval/reward", total_reward, epi)
+        agent.writer.add_scalar(f"eval/step", step, epi)
 
 
-def train_eval_algo(algo_name, env, agent: NetPolicy, train_num, eval_num, train_epoch_per_epi,
+def train_eval_algo(env, agent: NetPolicy, train_num, eval_num, train_epoch_per_epi,
                     train_start_epi=0, reward_func=None):
-    train_alog(algo_name, env, agent, train_num,
+    train_alog(env, agent, train_num,
                train_epoch_per_epi, train_start_epi, reward_func)
-    eval_alog(algo_name, env, agent, eval_num, reward_func)
+    eval_alog(env, agent, eval_num, reward_func)
