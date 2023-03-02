@@ -23,10 +23,11 @@ class DQNAgent(NetPolicy):
         epsilon=0.9,
         epsilon_min=0.01,
         epsilon_decay_step=1000,
-        max_global_gradient_norm:float =None
+        max_global_gradient_norm:float =None,
+        log_name:str="DQN",
     ):
         super().__init__(player_id, num_actions, network, optimizer,
-                         buffer_size)
+                         buffer_size, max_global_gradient_norm, log_name)
 
         self._min_train_size = min_train_size
         self._gamma = gamma
@@ -111,10 +112,14 @@ class DoubleDQNAgent(DQNAgent):
                  gamma=0.98,
                  epsilon=0.9,
                  epsilon_min=0.01,
-                 epsilon_decay_step=1000):
+                 epsilon_decay_step=1000,
+                 max_global_gradient_norm:float =None,
+                 log_name:str="DoubleDQN",
+                 ):
         super().__init__(player_id, num_actions, network, optimizer,
                          buffer_size, min_train_size, target_update_interval,
-                         gamma, epsilon, epsilon_min, epsilon_decay_step)
+                         gamma, epsilon, epsilon_min, epsilon_decay_step,
+                         max_global_gradient_norm, log_name)
 
     def update(self, batch_size=64):
         # check whether the length of replay buffer larger than the min train size
