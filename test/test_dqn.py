@@ -50,7 +50,7 @@ if __name__=="__main__":
         net=copy.deepcopy(value_net).to(DEVICE)
         optimizer=optim.SGD(net.parameters(),lr=1e-3)
         agent=DQNAgent(0,num_actions,net,optimizer,BUFFER_SIZE)
-        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func)
+        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func, max_step=MAX_STEP)
     
     # Double DQN
     for _ in range(EPISODE):
@@ -58,7 +58,7 @@ if __name__=="__main__":
         net=copy.deepcopy(value_net).to(DEVICE)
         optimizer=optim.SGD(net.parameters(),lr=1e-3)
         agent=DoubleDQNAgent(0,num_actions,net,optimizer,BUFFER_SIZE)
-        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func)
+        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func, max_step=MAX_STEP)
     
     # Dueling DQN
     for _ in range(EPISODE):
@@ -66,7 +66,7 @@ if __name__=="__main__":
         net=copy.deepcopy(dueling_value_net).to(DEVICE)
         optimizer=optim.SGD(net.parameters(),lr=1e-3)
         agent=DQNAgent(0,num_actions,net,optimizer,BUFFER_SIZE,log_name="DuelingDQN")
-        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func)
+        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func, max_step=MAX_STEP)
     
     # Double Dueling DQN
     for _ in range(EPISODE):
@@ -74,5 +74,5 @@ if __name__=="__main__":
         net=copy.deepcopy(dueling_value_net).to(DEVICE)
         optimizer=optim.SGD(net.parameters(),lr=1e-3)
         agent=DoubleDQNAgent(0,num_actions,net,optimizer,BUFFER_SIZE,log_name="DoubleDuelingDQN")
-        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func)
+        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func, max_step=MAX_STEP)
     

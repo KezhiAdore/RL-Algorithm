@@ -14,7 +14,7 @@ def set_seed(seed=0):
     random.seed(seed)
     torch.backends.cudnn.deterministic = True
 
-def run_game(env, agent: NetPolicy, reward_func=None, render=False):
+def run_game(env, agent: NetPolicy, reward_func=None, render=False, max_step=None):
     state, info= env.reset()
     step = 0
     total_reward = 0
@@ -24,7 +24,7 @@ def run_game(env, agent: NetPolicy, reward_func=None, render=False):
             env.render()
         action = agent.choose_action(state)
         next_state, reward, done, _, info = env.step(action)
-        if step>200:
+        if max_step and (step > max_step):
             done=True
         if reward_func:
             params = {
@@ -44,11 +44,11 @@ def run_game(env, agent: NetPolicy, reward_func=None, render=False):
 
 
 def train_alog(env, agent: NetPolicy, epi_num, epoch_per_epi, train_start_epi=0,
-               reward_func=None, render=False):
+               reward_func=None, render=False, max_step=None):
     train_bar = tqdm.tqdm(range(epi_num))
 
     for epi in train_bar:
-        step, total_reward = run_game(env, agent, reward_func, render)
+        step, total_reward = run_game(env, agent, reward_func, render, max_step)
         loss = []
         if epi >= train_start_epi:
             for epo in range(epoch_per_epi):
@@ -64,15 +64,15 @@ def train_alog(env, agent: NetPolicy, epi_num, epoch_per_epi, train_start_epi=0,
         train_bar.set_description("r: %.2f"%total_reward)
 
 
-def eval_alog(env, agent: NetPolicy, epi_num, reward_func=None, render=True):
+def eval_alog(env, agent: NetPolicy, epi_num, reward_func=None, render=True, max_step=None):
     for epi in range(epi_num):
-        step, total_reward = run_game(env, agent, reward_func, render)
+        step, total_reward = run_game(env, agent, reward_func, render, max_step)
         agent.writer.add_scalar(f"eval/reward", total_reward, epi)
         agent.writer.add_scalar(f"eval/step", step, epi)
 
 
 def train_eval_algo(env, agent: NetPolicy, train_num, eval_num, train_epoch_per_epi,
-                    train_start_epi=0, reward_func=None):
+                    train_start_epi=0, reward_func=None, max_step=None):
     train_alog(env, agent, train_num,
-               train_epoch_per_epi, train_start_epi, reward_func)
-    eval_alog(env, agent, eval_num, reward_func)
+               train_epoch_per_epi, train_start_epi, reward_func, False, max_step)
+    eval_alog(env, agent, eval_num, reward_func, True, max_step)

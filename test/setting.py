@@ -1,7 +1,8 @@
 ENV_NAME = "CartPole-v1"
 DEVICE = 'cuda'
 
-SEED = None
+SEED = 0
+MAX_STEP = 1000
 
 EPISODE = 1
 TRAIN_STEP = 1000
