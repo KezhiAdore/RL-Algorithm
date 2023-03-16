@@ -49,7 +49,7 @@ if __name__=="__main__":
         set_seed(SEED)
         net=copy.deepcopy(value_net).to(DEVICE)
         optimizer=optim.SGD(net.parameters(),lr=1e-3)
-        agent=DQNAgent(0,num_actions,net,optimizer)
+        agent=DQNAgent(0,num_actions,net,optimizer, log_name="DQN")
         train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func, max_step=MAX_STEP)
     
     # Double DQN
@@ -57,7 +57,7 @@ if __name__=="__main__":
         set_seed(SEED)
         net=copy.deepcopy(value_net).to(DEVICE)
         optimizer=optim.SGD(net.parameters(),lr=1e-3)
-        agent=DoubleDQNAgent(0,num_actions,net,optimizer)
+        agent=DoubleDQNAgent(0,num_actions,net,optimizer, log_name="DoubleDQN")
         train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func, max_step=MAX_STEP)
     
     # Dueling DQN
@@ -65,7 +65,7 @@ if __name__=="__main__":
         set_seed(SEED)
         net=copy.deepcopy(dueling_value_net).to(DEVICE)
         optimizer=optim.SGD(net.parameters(),lr=1e-3)
-        agent=DQNAgent(0,num_actions,net,optimizer,BUFFER_SIZE,log_name="DuelingDQN")
+        agent=DQNAgent(0,num_actions,net,optimizer,log_name="DuelingDQN")
         train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func, max_step=MAX_STEP)
     
     # Double Dueling DQN

@@ -1,4 +1,4 @@
-ENV_NAME = "CartPole-v1"
+ENV_NAME = "CartPole-v1"    # CartPole-v1, Pendulum-v1, MountainCar-v0, BipedalWalker-v2, Humanoid-v1
 DEVICE = 'cuda'
 
 SEED = 0
