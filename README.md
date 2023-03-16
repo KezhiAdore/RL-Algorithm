@@ -26,7 +26,7 @@ Implement of serval reinforcement learning algorithm
 | DPG(Deterministic Policy Gradient)     |                           |                    |
 | DDPG                                   |                           |                    |
 | TRPO(Trust Region Policy Optimization) | 10.5555/3045118.3045319   |                    |
-| PPO(Proximal Policy Optimization)      | arXiv:1707.06347          |                    |
+| PPO(Proximal Policy Optimization)      | arXiv:1707.06347          | :white_check_mark: |
 | TD3                                    |                           |                    |
 
 ## Code Reference
