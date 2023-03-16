@@ -65,7 +65,7 @@ class PolicyGradientAgent(ACNetPolicy):
         adv = np.zeros_like(rew)
         with torch.no_grad():
             obs_ = torch.FloatTensor(obs).to(self.val_device)
-            vals = self.val_network(obs_).cpu().numpy().reshape(-1,)
+            vals = self.val_net(obs_).cpu().numpy().reshape(-1,)
             adv[:-1] = rew[:-1] - (vals[:-1] - self._gamma * vals[1:])
             adv[-1] = rew[-1]
         adv = discount_cum(adv, self._gamma)
@@ -95,8 +95,8 @@ class PolicyGradientAgent(ACNetPolicy):
         ret = torch.FloatTensor(self.dataset["return"]).to(self.val_device)
 
         # 计算loss
-        value = self.val_network(obs)
+        value = self.val_net(obs)
         value_loss = F.mse_loss(value, ret.unsqueeze(-1))
         self.minimize_with_clipping(
-            self.val_network, self.val_optimizer, value_loss)
+            self.val_net, self.val_optimizer, value_loss)
         return value_loss.item()
