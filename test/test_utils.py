@@ -1,4 +1,4 @@
-from algorithms import NetPolicy
+from algorithms import SingleNetPolicy
 import tqdm
 import random
 import numpy as np
@@ -14,7 +14,7 @@ def set_seed(seed=0):
     random.seed(seed)
     torch.backends.cudnn.deterministic = True
 
-def run_game(env, agent: NetPolicy, reward_func=None, render=False, max_step=None):
+def run_game(env, agent: SingleNetPolicy, reward_func=None, render=False, max_step=None):
     state, info= env.reset()
     step = 0
     total_reward = 0
@@ -43,10 +43,11 @@ def run_game(env, agent: NetPolicy, reward_func=None, render=False, max_step=Non
     return step, total_reward
 
 
-def train_alog(env, agent: NetPolicy, epi_num, epoch_per_epi, train_start_epi=0,
+def train_alog(env, agent: SingleNetPolicy, epi_num, epoch_per_epi, train_start_epi=0,
                reward_func=None, render=False, max_step=None):
+    agent.train_mode()
+    
     train_bar = tqdm.tqdm(range(epi_num))
-
     for epi in train_bar:
         step, total_reward = run_game(env, agent, reward_func, render, max_step)
         loss = []
@@ -64,14 +65,15 @@ def train_alog(env, agent: NetPolicy, epi_num, epoch_per_epi, train_start_epi=0,
         train_bar.set_description("r: %.2f"%total_reward)
 
 
-def eval_alog(env, agent: NetPolicy, epi_num, reward_func=None, render=True, max_step=None):
+def eval_alog(env, agent: SingleNetPolicy, epi_num, reward_func=None, render=True, max_step=None):
+    agent.eval_mode()
     for epi in range(epi_num):
         step, total_reward = run_game(env, agent, reward_func, render, max_step)
         agent.writer.add_scalar(f"eval/reward", total_reward, epi)
         agent.writer.add_scalar(f"eval/step", step, epi)
 
 
-def train_eval_algo(env, agent: NetPolicy, train_num, eval_num, train_epoch_per_epi,
+def train_eval_algo(env, agent: SingleNetPolicy, train_num, eval_num, train_epoch_per_epi,
                     train_start_epi=0, reward_func=None, max_step=None):
     train_alog(env, agent, train_num,
                train_epoch_per_epi, train_start_epi, reward_func, False, max_step)

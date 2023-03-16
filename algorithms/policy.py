@@ -159,9 +159,9 @@ class TabularPolicy(RandomPolicy):
         return repr(state)
 
 
-class NetPolicy(RandomPolicy):
+class SingleNetPolicy(RandomPolicy):
     """
-        A policy implemented by neural network, the action probs could be computing by the neural network, and the policy
+        A policy implemented by neural network, the action probs could be computed by the neural network, and the policy
         could be optimized by updating the parameters of the neural network
     """
 
@@ -170,16 +170,23 @@ class NetPolicy(RandomPolicy):
                  num_actions: int,
                  network: nn.Module,
                  optimizer: optim.Optimizer,
-                 buffer_size: int,
-                 max_global_gradient_norm:float =None,
+                 update_num: int=1,
+                 gamma: float=0.98,
+                 buffer_size: int=1000000,
+                 max_global_gradient_norm: float=None,
                  log_name: str="",
                  ):
-        super(NetPolicy, self).__init__(player_id, num_actions)
+        super(SingleNetPolicy, self).__init__(player_id, num_actions)
+        
+        self._train = True
+        
         self._network = network
         self._optimizer = optimizer
-        self._train = False
-        self._buffer = ReplayBuffer(buffer_size)
+        self._update_num = update_num
+        self._gamma = gamma
         self._max_global_gradient_norm = max_global_gradient_norm
+        
+        self.buffer = ReplayBuffer(buffer_size)
         
         now=datetime.now()
         if log_name:
@@ -194,8 +201,18 @@ class NetPolicy(RandomPolicy):
         action=np.random.choice(actions,p=probs)
         return action
     
+    def action_probabilities(self, state, legal_action_mask=None):
+        return NotImplementedError()
+    
     def update(self):
         return NotImplementedError()
+    
+    def legalize_probabilities(self, action_probs, legal_action_mask=None):
+        if legal_action_mask is None:
+            legal_action_mask = [1 for _ in range(self._num_actions)]
+        action_probs *= legal_action_mask
+        action_probs /= np.sum(action_probs)
+        return action_probs
     
     def minimize_with_clipping(self, net:nn.Module, optimizer:optim.Optimizer, loss:Tensor):
         optimizer.zero_grad()
@@ -216,7 +233,7 @@ class NetPolicy(RandomPolicy):
         self._network.eval()
         
     def clear_buffer(self):
-        self._buffer.reset()        
+        self.buffer.reset()        
 
     @property
     def network(self):
@@ -230,3 +247,71 @@ class NetPolicy(RandomPolicy):
     def optimizer(self):
         return self._optimizer
     
+    @property
+    def gamma(self):
+        return self._gamma
+    
+    @property
+    def update_num(self):
+        return self._update_num
+
+
+class ACNetPolicy(SingleNetPolicy):
+    """
+        Actor-Critic Policy, including an actor network and a value network,
+        the action probs could be computed by actor network,
+        the state value or state-action value could be computed by value network
+    """
+    def __init__(self, 
+                 player_id, 
+                 num_actions: int, 
+                 pi_net: nn.Module, 
+                 v_net: nn.Module,
+                 pi_optimizer: optim.Optimizer, 
+                 v_optimizer: optim.Optimizer,
+                 pi_update_num: int = 1,
+                 v_update_num: int=1,
+                 gamma: float = 0.98, 
+                 buffer_size: int = 1000000, 
+                 max_global_gradient_norm: float = None, 
+                 log_name: str = "",
+                 ):
+        super().__init__(player_id, num_actions, pi_net, pi_optimizer, pi_update_num, 
+                         gamma, buffer_size, max_global_gradient_norm, log_name)
+        self._v_net = v_net
+        self._v_optimizer = v_optimizer
+        self._v_update_num = v_update_num
+    
+    @property
+    def pi_network(self):
+        return self._network
+    
+    @property
+    def pi_optimizer(self):
+        return self._optimizer
+    
+    @property
+    def pi_update_num(self):
+        return self._update_num
+    
+    @property
+    def pi_device(self):
+        return next(self._network.parameters()).device
+    
+    @property
+    def val_network(self):
+        return self._v_net
+    
+    @property
+    def val_optimizer(self):
+        return self._v_optimizer
+    
+    @property
+    def val_update_num(self):
+        return self._v_update_num
+    
+    @property
+    def val_device(self):
+        return next(self._v_net.parameters()).device
+        
+        

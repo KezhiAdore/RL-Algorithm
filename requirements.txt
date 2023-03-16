@@ -1,4 +1,4 @@
-gym
+gym==0.26.2
 gym[classic_control]
 gym[box2d]
 torch

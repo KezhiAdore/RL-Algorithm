@@ -40,6 +40,5 @@ if __name__ == "__main__":
         set_seed(SEED)
         net = copy.deepcopy(policy_net)
         optimizer = optim.Adam(net.parameters(), lr=3e-4)
-        agent = ReinforceAgent(0, num_actions, net,
-                               optimizer, BUFFER_SIZE, log_name="reinforce")
+        agent = ReinforceAgent(0, num_actions, net, optimizer, BUFFER_SIZE)
         train_eval_algo(env, agent, TRAIN_STEP, EVAL_STEP, 1, reward_func=None, max_step=MAX_STEP)

@@ -31,7 +31,7 @@ class PolicyNet(nn.Module):
 
     def forward(self, x):
         x = self.net(x)
-        x = F.softmax(x)
+        x = F.softmax(x, dim=-1)
         return x
 
 
@@ -54,6 +54,5 @@ if __name__ == "__main__":
         actor_optimizer = optim.Adam(actor_net.parameters(), lr=1e-3)
         critic_optimizer = optim.Adam(b_net.parameters(), lr=1e-3)
         # policy gradient
-        pg_agent = PolicyGradientAgent(0, num_actions, actor_net, b_net,
-                                    actor_optimizer, critic_optimizer, 100000)
-        train_eval_algo(env, pg_agent, 1000, 0, 1, max_step=MAX_STEP)
+        pg_agent = PolicyGradientAgent(0, num_actions, actor_net, b_net,actor_optimizer, critic_optimizer)
+        train_eval_algo(env, pg_agent, TRAIN_STEP, EVAL_STEP, 1, max_step=MAX_STEP)

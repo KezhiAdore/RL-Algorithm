@@ -5,20 +5,22 @@ from torch import optim
 from torch.nn import functional as F
 from tianshou.data.batch import Batch
 
-from algorithms.policy import NetPolicy
+from algorithms.policy import SingleNetPolicy
 
 
-class ReinforceAgent(NetPolicy):
+class ReinforceAgent(SingleNetPolicy):
     def __init__(self, 
                  player_id, 
-                 num_actions, 
+                 num_actions: int, 
                  network: nn.Module, 
-                 optimizer: optim.Optimizer,
-                 buffer_size: int,
-                 gamma=0.98,
-                 log_name=""):
-        super().__init__(player_id, num_actions, network, optimizer, buffer_size, log_name=log_name)
-        self._gamma=gamma
+                 optimizer: optim.Optimizer, 
+                 update_num: int = 1, 
+                 gamma: float = 0.98, 
+                 buffer_size: int = 1000000, 
+                 max_global_gradient_norm: float = None, 
+                 log_name: str = ""):
+        super().__init__(player_id, num_actions, network, optimizer, update_num, 
+                         gamma, buffer_size, max_global_gradient_norm, log_name)
     
     def action_probabilities(self, state, legal_action_mask=None):
         if legal_action_mask is None:
@@ -26,7 +28,7 @@ class ReinforceAgent(NetPolicy):
         
         state=torch.FloatTensor(state).to(self.device)
         with torch.no_grad():
-            action_probs=self._network(state).cpu().numpy()
+            action_probs=self.network(state).cpu().numpy()
         
         action_probs*=legal_action_mask # legal mask
         
@@ -42,13 +44,14 @@ class ReinforceAgent(NetPolicy):
             "obs":state,
             "act":action,
             "rew":reward,
-            "done":done,
+            "terminated":done,
             "obs_next":next_state,
+            "truncated": done,
         })
-        self._buffer.add(batch)
+        self.buffer.add(batch)
         
     def update(self):
-        batch = self._buffer.sample(0)[0]
+        batch = self.buffer.sample(0)[0]
         state = torch.FloatTensor(batch['obs']).to(self.device)
         action = torch.LongTensor(batch['act']).view(-1,1).to(self.device)
         reward = torch.FloatTensor(batch['rew']).to(self.device)
@@ -59,8 +62,8 @@ class ReinforceAgent(NetPolicy):
         #     r = reward[i]
         #     s = torch.FloatTensor([batch["obs"][i]]).to(self.device)
         #     a = torch.LongTensor([batch["act"][i]]).view(-1,1).to(self.device)
-        #     log_prob = torch.log(self._network(s)).gather(1,a)
-        #     G = self._gamma * G + r
+        #     log_prob = torch.log(self.network(s)).gather(1,a)
+        #     G = self.gamma * G + r
         #     loss = -log_prob * G
         #     loss.backward()
         # self._optimizer.step()
@@ -70,11 +73,11 @@ class ReinforceAgent(NetPolicy):
         discount_reward=torch.zeros_like(reward)
         discount_reward[-1]=reward[-1]
         for t in reversed(range(len(reward)-1)):
-            discount_reward[t]=reward[t]+self._gamma*discount_reward[t+1]
+            discount_reward[t]=reward[t]+self.gamma*discount_reward[t+1]
         discount_reward = discount_reward.unsqueeze(-1)
         
         # network forward
-        action_probs=self._network(state)
+        action_probs=self.network(state)
         
         loss = torch.log(action_probs.gather(1, action))
         loss = torch.sum(-loss*discount_reward)
