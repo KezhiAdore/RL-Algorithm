@@ -73,7 +73,7 @@ class ReinforceAgent(SingleNetPolicy):
         discount_reward=torch.zeros_like(reward)
         discount_reward[-1]=reward[-1]
         for t in reversed(range(len(reward)-1)):
-            discount_reward[t]=reward[t]+self.gamma*discount_reward[t+1]
+            discount_reward[t]=reward[t]+self._gamma*discount_reward[t+1]
         discount_reward = discount_reward.unsqueeze(-1)
         
         # network forward

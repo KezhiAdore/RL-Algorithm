@@ -248,10 +248,6 @@ class SingleNetPolicy(RandomPolicy):
         return self._optimizer
     
     @property
-    def gamma(self):
-        return self._gamma
-    
-    @property
     def update_num(self):
         return self._update_num
 
@@ -283,7 +279,7 @@ class ACNetPolicy(SingleNetPolicy):
         self._v_update_num = v_update_num
     
     @property
-    def pi_network(self):
+    def pi_net(self):
         return self._network
     
     @property
@@ -299,7 +295,7 @@ class ACNetPolicy(SingleNetPolicy):
         return next(self._network.parameters()).device
     
     @property
-    def val_network(self):
+    def val_net(self):
         return self._v_net
     
     @property

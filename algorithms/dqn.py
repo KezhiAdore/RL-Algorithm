@@ -86,7 +86,7 @@ class DQNAgent(SingleNetPolicy):
         next_action = torch.argmax(next_q_value, dim=1).unsqueeze(-1)
         max_next_q_value = next_q_value.gather(1, next_action)
 
-        q_target = reward + self.gamma * max_next_q_value * (1 - done)
+        q_target = reward + self._gamma * max_next_q_value * (1 - done)
 
         loss = F.mse_loss(q_value, q_target)
         self.minimize_with_clipping(self._network,self._optimizer,loss)
@@ -122,7 +122,7 @@ class DoubleDQNAgent(DQNAgent):
                                    dim=1).unsqueeze(-1)
         max_next_q_value = next_q_value.gather(1, next_action)
 
-        q_target = reward + self.gamma * max_next_q_value * (1 - done)
+        q_target = reward + self._gamma * max_next_q_value * (1 - done)
 
         loss = F.mse_loss(q_value, q_target)
         self.minimize_with_clipping(self.network, self.optimizer, loss)

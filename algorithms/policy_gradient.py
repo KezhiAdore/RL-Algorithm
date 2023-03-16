@@ -31,7 +31,7 @@ class PolicyGradientAgent(ACNetPolicy):
 
     def action_probabilities(self, state, legal_action_mask=None):
         with torch.no_grad():
-            act_prob = self.pi_network(torch.FloatTensor(
+            act_prob = self.pi_net(torch.FloatTensor(
                 state).to(self.device)).cpu().numpy()
         act_prob = self.legalize_probabilities(act_prob, legal_action_mask)
         return {act: act_prob[act] for act in range(self._num_actions)}
@@ -71,15 +71,15 @@ class PolicyGradientAgent(ACNetPolicy):
         rew = batch["rew"]
         done = batch["terminated"]
         obs_next = batch["obs_next"]
-        ret = discount_cum(rew, self.gamma)
+        ret = discount_cum(rew, self._gamma)
         
         adv = np.zeros_like(rew)
         with torch.no_grad():
             obs_ = torch.FloatTensor(obs).to(self.val_device)
             vals = self.val_network(obs_).cpu().numpy().reshape(-1,)
-            adv[:-1] = rew[:-1] - (vals[:-1] - self.gamma * vals[1:])
+            adv[:-1] = rew[:-1] - (vals[:-1] - self._gamma * vals[1:])
             adv[-1] = rew[-1]
-        adv = discount_cum(adv, self.gamma)
+        adv = discount_cum(adv, self._gamma)
         
         self.dataset["obs"].extend(obs)
         self.dataset["act"].extend(act)
@@ -94,11 +94,11 @@ class PolicyGradientAgent(ACNetPolicy):
         act = torch.LongTensor(self.dataset["act"]).view(-1,1).to(self.pi_device)
         adv = torch.FloatTensor(self.dataset["adv"]).view(-1,1).to(self.pi_device)
 
-        act_prob = self.pi_network(obs)
+        act_prob = self.pi_net(obs)
             
         loss = torch.log(act_prob.gather(1, act))
         loss = torch.sum(-loss * adv)
-        self.minimize_with_clipping(self.pi_network, self.pi_optimizer, loss)
+        self.minimize_with_clipping(self.pi_net, self.pi_optimizer, loss)
         return loss.item()
 
     def _val_update(self):
