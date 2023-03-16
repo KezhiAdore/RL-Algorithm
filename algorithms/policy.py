@@ -1,9 +1,11 @@
 import copy
-from datetime import datetime
 import numpy as np
+
+from datetime import datetime
 from torch import nn, optim, Tensor
 from torch.utils.tensorboard.writer import SummaryWriter
 from tianshou.data.buffer.base import ReplayBuffer
+from tianshou.data.batch import Batch
 
 
 class Policy:
@@ -190,7 +192,7 @@ class SingleNetPolicy(RandomPolicy):
         
         now=datetime.now()
         if log_name:
-            self.writer=SummaryWriter(f"./logs_{log_name}/{now.day}_{now.hour}_{now.minute}")
+            self.writer=SummaryWriter(f"./logs/{log_name}_{now.day}_{now.hour}_{now.minute}")
         else:
             self.writer=SummaryWriter(f"./logs/{now.day}_{now.hour}_{now.minute}")
     
@@ -206,6 +208,17 @@ class SingleNetPolicy(RandomPolicy):
     
     def update(self):
         return NotImplementedError()
+    
+    def store(self, state, action, reward, done, next_state):
+        batch = Batch({
+            "obs": state,
+            "act": action,
+            "rew": reward,
+            "terminated": done,
+            "obs_next": next_state,
+            "truncated": done,
+        })
+        self.buffer.add(batch)
     
     def legalize_probabilities(self, action_probs, legal_action_mask=None):
         if legal_action_mask is None:

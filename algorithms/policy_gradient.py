@@ -3,7 +3,7 @@ from utils import discount_cum
 from torch import nn
 from torch import optim
 from torch.nn import functional as F
-from tianshou.data.batch import Batch
+
 import torch
 import numpy as np
 import collections
@@ -36,20 +36,9 @@ class PolicyGradientAgent(ACNetPolicy):
         act_prob = self.legalize_probabilities(act_prob, legal_action_mask)
         return {act: act_prob[act] for act in range(self._num_actions)}
 
-    def store(self, state, action, reward, done, next_state):
-        batch = Batch({
-            "obs": state,
-            "act": action,
-            "rew": reward,
-            "terminated": done,
-            "obs_next": next_state,
-            "truncated": done,
-        })
-        self.buffer.add(batch)
-
     def update(self):
         loss = None
-        self._add_buffer_data_todataset()
+        self._buffer_to_dataset()
         
         for _ in range(self.pi_update_num):
             loss = self._pi_update()
@@ -64,7 +53,7 @@ class PolicyGradientAgent(ACNetPolicy):
         super().clear_buffer()
         self.dataset = collections.defaultdict(list)
 
-    def _add_buffer_data_todataset(self):
+    def _buffer_to_dataset(self):
         batch = self.buffer.sample(0)[0]
         obs = batch["obs"]
         act = batch["act"]

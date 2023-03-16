@@ -3,7 +3,6 @@ import torch
 import numpy as np
 from torch import nn, optim
 from torch.nn import functional as F
-from tianshou.data.batch import Batch
 
 from .policy import SingleNetPolicy
 
@@ -54,17 +53,6 @@ class DQNAgent(SingleNetPolicy):
             q_value = self.network(state).cpu().numpy()
             q_value *= legal_action_mask
         return np.argmax(q_value)
-
-    def store(self, state, action, reward, done, next_state):
-        batch = Batch({
-            "obs": state,
-            "act": action,
-            "rew": reward,
-            "terminated": done,
-            "obs_next": next_state,
-            "truncated": done
-        })
-        self.buffer.add(batch)
 
     def update(self, batch_size=64):
         # check whether the length of replay buffer larger than the min train size
