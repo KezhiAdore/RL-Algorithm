@@ -116,9 +116,11 @@ class PPOAgent(ACNetPolicy):
         log_p = torch.log(pi.gather(1, act.view(-1,1)))
         
         ratio = torch.exp(log_p - log_p_old)
+        loss = ratio * adv
         if self._algo_type == "clip" or self._algo_type == "all":
-            ratio = torch.clip(ratio, 1 - self._clip_ratio, 1 + self._clip_ratio)
-        loss = torch.mean(ratio * adv)
+            clip_loss = torch.clip(ratio, 1 - self._clip_ratio, 1 + self._clip_ratio) * adv
+            loss = torch.min(loss, clip_loss)
+        loss = -torch.mean(loss)
         
         if self._algo_type == "adapt" or self._algo_type == "all":
             approx_KL = torch.mean(log_p - log_p_old)
@@ -126,11 +128,11 @@ class PPOAgent(ACNetPolicy):
             loss += self._beta * approx_KL
             # update beta
             if approx_KL < self._target_KL/1.5:
-                self._beta *= 2
+                self._beta /= 2
             if approx_KL > self._target_KL/1.5:
                 self._beta *= 2
         
-        self.minimize_with_clipping(self.pi_net, self.pi_optimizer, -loss)
+        self.minimize_with_clipping(self.pi_net, self.pi_optimizer, loss)
         return loss.item()
          
     
