@@ -13,7 +13,6 @@ class DQNAgent(SingleNetPolicy):
                  num_actions: int, 
                  network: nn.Module, 
                  optimizer: optim.Optimizer, 
-                 update_num: int = 1, 
                  min_train_size=500,
                  target_update_interval=20,
                  gamma: float = 0.98, 
@@ -24,8 +23,8 @@ class DQNAgent(SingleNetPolicy):
                  max_global_gradient_norm: float = None, 
                  log_name: str = "",
                  ):
-        super().__init__(player_id, num_actions, network, optimizer, update_num, 
-                         gamma, buffer_size, max_global_gradient_norm, log_name)
+        super().__init__(player_id, num_actions, network, optimizer, gamma, 
+                         buffer_size, max_global_gradient_norm, log_name)
 
         self._min_train_size = min_train_size
         self._epsilon = epsilon

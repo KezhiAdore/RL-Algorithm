@@ -172,7 +172,6 @@ class SingleNetPolicy(RandomPolicy):
                  num_actions: int,
                  network: nn.Module,
                  optimizer: optim.Optimizer,
-                 update_num: int=1,
                  gamma: float=0.98,
                  buffer_size: int=1000000,
                  max_global_gradient_norm: float=None,
@@ -184,7 +183,6 @@ class SingleNetPolicy(RandomPolicy):
         
         self._network = network
         self._optimizer = optimizer
-        self._update_num = update_num
         self._gamma = gamma
         self._max_global_gradient_norm = max_global_gradient_norm
         
@@ -259,10 +257,6 @@ class SingleNetPolicy(RandomPolicy):
     @property
     def optimizer(self):
         return self._optimizer
-    
-    @property
-    def update_num(self):
-        return self._update_num
 
 
 class ACNetPolicy(SingleNetPolicy):
@@ -285,11 +279,12 @@ class ACNetPolicy(SingleNetPolicy):
                  max_global_gradient_norm: float = None, 
                  log_name: str = "",
                  ):
-        super().__init__(player_id, num_actions, pi_net, pi_optimizer, pi_update_num, 
-                         gamma, buffer_size, max_global_gradient_norm, log_name)
+        super().__init__(player_id, num_actions, pi_net, pi_optimizer, gamma, 
+                         buffer_size, max_global_gradient_norm, log_name)
         self._v_net = v_net
         self._v_optimizer = v_optimizer
         self._v_update_num = v_update_num
+        self._pi_update_num = pi_update_num
     
     @property
     def pi_net(self):
@@ -301,7 +296,7 @@ class ACNetPolicy(SingleNetPolicy):
     
     @property
     def pi_update_num(self):
-        return self._update_num
+        return self._pi_update_num
     
     @property
     def pi_device(self):

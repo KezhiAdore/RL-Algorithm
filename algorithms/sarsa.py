@@ -18,7 +18,6 @@ class SARSAAgent(SingleNetPolicy):
         num_actions,
         network: nn.Module,
         optimizer: optim.Optimizer,
-        update_num: int=1,
         buffer_size: int=100000,
         min_train_size: int=500,
         target_update_interval: int=20,
@@ -29,9 +28,8 @@ class SARSAAgent(SingleNetPolicy):
         max_global_gradient_norm: float = None, 
         log_name: str = "",
     ):
-        super().__init__(player_id, num_actions, network, optimizer,
-                         update_num, gamma, buffer_size, max_global_gradient_norm,
-                         log_name)
+        super().__init__(player_id, num_actions, network, optimizer,gamma, 
+                         buffer_size, max_global_gradient_norm, log_name)
 
         self._gamma = gamma
         self._epsilon = epsilon
@@ -51,7 +49,7 @@ class SARSAAgent(SingleNetPolicy):
             legal_action_mask = [1 for _ in range(self._num_actions)]
         state = torch.FloatTensor(state)
         with torch.no_grad():
-            q_value = F.softmax(self._network(state)).cpu().numpy()
+            q_value = F.softmax(self._network(state), dim=-1).cpu().numpy()
             q_value *= legal_action_mask
             action_probs=q_value/np.sum(q_value)
         return {action: action_probs[action] for action in range(self._num_actions)} 
