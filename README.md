@@ -15,14 +15,15 @@ Implement of serval reinforcement learning algorithm
 | Algorithm                              | Reference                 | Status             |
 | -------------------------------------- | ------------------------- | ------------------ |
 | DQN                                    | 10.1038/nature14236       | :white_check_mark: |
+| SARSA                                  |                           | :white_check_mark: |
 | Double DQN                             | 10.1609/aaai.v30i1.10295  | :white_check_mark: |
 | Dueling DQN                            | 10.48550/arXiv.1511.06581 | :white_check_mark: |
 | Rainbow DQN                            | 10.1609/aaai.v32i1.11796  |                    |
 | REINFORCE                              | 10.1007/BF00992696        | :white_check_mark: |
 | VPG(Vanilla Policy Gradient)           |                           | :white_check_mark: |
-| AC(Actor Critic)                       |                           |                    |
-| A3C                                    |                           |                    |
+| AC(Actor Critic)                       |                           | ~                  |
 | A2C                                    |                           |                    |
+| A3C                                    |                           |                    |
 | DPG(Deterministic Policy Gradient)     |                           |                    |
 | DDPG                                   |                           |                    |
 | TRPO(Trust Region Policy Optimization) | 10.5555/3045118.3045319   |                    |
