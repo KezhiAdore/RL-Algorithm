@@ -29,6 +29,7 @@ class DQNAgent(SingleNetPolicy):
 
         self._min_train_size = min_train_size
         self._epsilon = epsilon
+        self._epsilon_min = epsilon_min
         self._epsilon_decay = (epsilon - epsilon_min) / epsilon_decay_step
 
         # initial target network
@@ -37,7 +38,6 @@ class DQNAgent(SingleNetPolicy):
         self._update_count = 0
     
     def choose_action(self, state, legal_action_mask=None):
-        self._epsilon -= self._epsilon_decay
         if self._train:
             if np.random.random() < self._epsilon:
                 action_probs = self.equal_probabilities(
@@ -55,6 +55,7 @@ class DQNAgent(SingleNetPolicy):
         return np.argmax(q_value)
 
     def update(self, batch_size=64):
+        self._epsilon = np.clip(self._epsilon - self._epsilon_decay, self._epsilon_min, np.inf)
         # check whether the length of replay buffer larger than the min train size
         if len(self.buffer) < self._min_train_size:
             return
@@ -90,6 +91,7 @@ class DQNAgent(SingleNetPolicy):
 class DoubleDQNAgent(DQNAgent):
 
     def update(self, batch_size=64):
+        self._epsilon = np.clip(self._epsilon - self._epsilon_decay, self._epsilon_min, np.inf)
         # check whether the length of replay buffer larger than the min train size
         if len(self.buffer) < self._min_train_size:
             return
