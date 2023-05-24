@@ -2,7 +2,7 @@ import sys
 sys.path.append('.')
 
 from reward import RewardFuncDict
-from test_utils import train_eval_algo, set_seed
+from test_utils import train_algo, set_seed
 from utils.simple_nets import MLP
 from algorithms import PolicyGradientAgent
 from torch import nn, optim
@@ -55,4 +55,4 @@ if __name__ == "__main__":
         critic_optimizer = optim.Adam(b_net.parameters(), lr=1e-3)
         # policy gradient
         pg_agent = PolicyGradientAgent(0, num_actions, actor_net, b_net,actor_optimizer, critic_optimizer, log_name="pg")
-        train_eval_algo(env, pg_agent, TRAIN_STEP, EVAL_STEP, 1, max_step=MAX_STEP)
+        train_algo(env, pg_agent, EPISODE_NUM, max_step=MAX_STEP)

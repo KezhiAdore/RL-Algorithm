@@ -7,7 +7,7 @@ sys.path.append('.')
 
 from algorithms import SARSAAgent
 from utils.simple_nets import MLP
-from test_utils import train_eval_algo, set_seed
+from test_utils import train_algo, set_seed
 from reward import RewardFuncDict
 
 
@@ -20,6 +20,7 @@ class ValueNet(nn.Module):
     
     def forward(self, x):
         return self.net(x)
+
 if __name__=="__main__":
     ### test dqn
     from setting import *
@@ -38,4 +39,4 @@ if __name__=="__main__":
         net=copy.deepcopy(value_net).to(DEVICE)
         optimizer=optim.SGD(net.parameters(),lr=1e-3)
         agent=SARSAAgent(0,num_actions,net,optimizer, log_name="SARSA", max_global_gradient_norm=10)
-        train_eval_algo(env, agent,TRAIN_STEP,EVAL_STEP,5, reward_func=reward_func, max_step=MAX_STEP)
+        train_algo(env, agent, EPISODE_NUM, train_num=5, max_step=MAX_STEP, reward_func=reward_func)

@@ -2,7 +2,7 @@ import sys
 sys.path.append('.')
 
 from reward import RewardFuncDict
-from test_utils import train_eval_algo, set_seed
+from test_utils import train_algo, set_seed
 from utils.simple_nets import MLP
 from algorithms import PPOAgent
 from torch import nn, optim
@@ -54,8 +54,8 @@ if __name__ == "__main__":
         pi_optimizer = optim.Adam(pi_net.parameters(), lr=1e-3)
         val_optimizer = optim.Adam(val_net.parameters(), lr=1e-3)
         # clipping ppo
-        pg_agent = PPOAgent(0, num_actions, pi_net, val_net,pi_optimizer, val_optimizer, algo_type='clip', log_name='clip')
-        train_eval_algo(env, pg_agent, TRAIN_STEP, EVAL_STEP, 1, max_step=MAX_STEP, reward_func=reward_func)
+        agent = PPOAgent(0, num_actions, pi_net, val_net,pi_optimizer, val_optimizer, algo_type='clip', log_name='clip')
+        train_algo(env, agent, EPISODE_NUM, max_step=MAX_STEP, reward_func=reward_func)
     
     for _ in range(EPISODE):
         set_seed(SEED)
@@ -64,8 +64,8 @@ if __name__ == "__main__":
         pi_optimizer = optim.Adam(pi_net.parameters(), lr=1e-3)
         val_optimizer = optim.Adam(val_net.parameters(), lr=1e-3)
         # none ppo
-        pg_agent = PPOAgent(0, num_actions, pi_net, val_net,pi_optimizer, val_optimizer, algo_type='none', log_name='none')
-        train_eval_algo(env, pg_agent, TRAIN_STEP, EVAL_STEP, 1, max_step=MAX_STEP, reward_func=reward_func)
+        agent = PPOAgent(0, num_actions, pi_net, val_net,pi_optimizer, val_optimizer, algo_type='none', log_name='none')
+        train_algo(env, agent, EPISODE_NUM, max_step=MAX_STEP, reward_func=reward_func)
     
     for _ in range(EPISODE):
         set_seed(SEED)
@@ -74,8 +74,8 @@ if __name__ == "__main__":
         pi_optimizer = optim.Adam(pi_net.parameters(), lr=1e-3)
         val_optimizer = optim.Adam(val_net.parameters(), lr=1e-3)
         # adapt ppo
-        pg_agent = PPOAgent(0, num_actions, pi_net, val_net,pi_optimizer, val_optimizer, algo_type='adapt', log_name='adapt')
-        train_eval_algo(env, pg_agent, TRAIN_STEP, EVAL_STEP, 1, max_step=MAX_STEP, reward_func=reward_func)
+        agent = PPOAgent(0, num_actions, pi_net, val_net,pi_optimizer, val_optimizer, algo_type='adapt', log_name='adapt')
+        train_algo(env, agent, EPISODE_NUM, max_step=MAX_STEP, reward_func=reward_func)
     
     for _ in range(EPISODE):
         set_seed(SEED)
@@ -84,5 +84,5 @@ if __name__ == "__main__":
         pi_optimizer = optim.Adam(pi_net.parameters(), lr=1e-3)
         val_optimizer = optim.Adam(val_net.parameters(), lr=1e-3)
         # adapt ppo
-        pg_agent = PPOAgent(0, num_actions, pi_net, val_net,pi_optimizer, val_optimizer, algo_type='all', log_name='all')
-        train_eval_algo(env, pg_agent, TRAIN_STEP, EVAL_STEP, 1, max_step=MAX_STEP, reward_func=reward_func)
+        agent = PPOAgent(0, num_actions, pi_net, val_net,pi_optimizer, val_optimizer, algo_type='all', log_name='all')
+        train_algo(env, agent, EPISODE_NUM, max_step=MAX_STEP, reward_func=reward_func)

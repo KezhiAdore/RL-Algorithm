@@ -5,7 +5,7 @@ from torch.nn import functional as F
 from torch import nn, optim
 from algorithms import ReinforceAgent
 from utils.simple_nets import MLP
-from test_utils import train_eval_algo, set_seed
+from test_utils import train_algo, set_seed
 from reward import RewardFuncDict
 import gym
 import copy
@@ -41,4 +41,4 @@ if __name__ == "__main__":
         net = copy.deepcopy(policy_net)
         optimizer = optim.Adam(net.parameters(), lr=3e-4)
         agent = ReinforceAgent(0, num_actions, net, optimizer, BUFFER_SIZE)
-        train_eval_algo(env, agent, TRAIN_STEP, EVAL_STEP, 1, reward_func=None, max_step=MAX_STEP)
+        train_algo(env, agent, EPISODE_NUM, max_step=MAX_STEP, reward_func=reward_func)

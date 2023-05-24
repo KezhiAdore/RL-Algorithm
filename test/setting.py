@@ -1,11 +1,10 @@
 ENV_NAME = "CartPole-v1"    # CartPole-v1, Pendulum-v1, MountainCar-v0, BipedalWalker-v2, Humanoid-v1
-DEVICE = 'cuda'
+DEVICE = 'cpu'
 
 SEED = 0
-MAX_STEP = 1000
+MAX_STEP = 400
 
-EPISODE = 1
-TRAIN_STEP = 1000
-EVAL_STEP = 0
+REPEAT_EXPERIMENTS = 1
+EPISODE_NUM = 1000
 
 BUFFER_SIZE = 100000
