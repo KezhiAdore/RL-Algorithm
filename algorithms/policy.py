@@ -35,7 +35,7 @@ class Policy:
         Returns:
             A `dict` of `{action:probability}` for the giving game state
         """
-        return NotImplemented()
+        raise NotImplementedError("The function named action_probabilities should be declared within a subclass of the Policy class")
 
     def choose_action(self, state, legal_action_mask=None):
         """ Return the chosen action by the policy
@@ -47,7 +47,7 @@ class Policy:
         Returns:
             index of action
         """
-        return NotImplemented()
+        raise NotImplementedError("The function named choose_action should be declared within a subclass of the Policy class")
 
     def __call__(self, state, legal_action_mask=None):
         """Turns the policy into a callable
@@ -202,10 +202,10 @@ class SingleNetPolicy(RandomPolicy):
         return action
     
     def action_probabilities(self, state, legal_action_mask=None):
-        return NotImplementedError()
+        raise NotImplementedError("The function named action_probabilities should be declared within a subclass of the SingleNetPolicy class")
     
     def update(self):
-        return NotImplementedError()
+        raise NotImplementedError("The function named update should be declared within a subclass of the SingleNetPolicy class")
     
     def store(self, state, action, reward, done, truncated, next_state):
         batch = Batch({
