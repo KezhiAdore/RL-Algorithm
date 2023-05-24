@@ -111,11 +111,12 @@ class SARSAAgent(SingleNetPolicy):
         next_state = torch.FloatTensor(batch["obs_next"]).to(self.device)
         next_action = torch.LongTensor(batch["info"]["act_next"]).to(self.device).unsqueeze(-1)
         done = torch.FloatTensor(batch["terminated"]).to(self.device).unsqueeze(-1)
+        truncated = torch.FloatTensor(batch["truncated"]).to(self.device).unsqueeze(-1)
 
         q_value = self.network(state).gather(1, action)
 
-        next_q_value = self._target_network(next_state).gather(-1,next_action)
-        q_target = reward + self._gamma * next_q_value
+        next_q_value = self._target_network(next_state).gather(-1, next_action)
+        q_target = reward + self._gamma * next_q_value * (1 - done + truncated)
 
         loss = F.mse_loss(q_value, q_target)
         self._optimizer.zero_grad()

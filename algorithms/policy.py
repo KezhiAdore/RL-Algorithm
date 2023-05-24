@@ -207,14 +207,14 @@ class SingleNetPolicy(RandomPolicy):
     def update(self):
         return NotImplementedError()
     
-    def store(self, state, action, reward, done, next_state):
+    def store(self, state, action, reward, done, truncated, next_state):
         batch = Batch({
             "obs": state,
             "act": action,
             "rew": reward,
             "terminated": done,
             "obs_next": next_state,
-            "truncated": done,
+            "truncated": truncated,
         })
         self.buffer.add(batch)
     

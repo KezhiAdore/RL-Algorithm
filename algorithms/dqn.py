@@ -19,7 +19,7 @@ class DQNAgent(SingleNetPolicy):
                  epsilon=0.9, 
                  epsilon_min=0.01,
                  epsilon_decay_step=1000,
-                 buffer_size: int = 1000000, 
+                 buffer_size: int = 100000, 
                  max_global_gradient_norm: float = None, 
                  log_name: str = "",
                  ):
@@ -67,6 +67,7 @@ class DQNAgent(SingleNetPolicy):
         reward = torch.FloatTensor(batch["rew"]).to(self.device).unsqueeze(-1)
         next_state = torch.FloatTensor(batch["obs_next"]).to(self.device)
         done = torch.FloatTensor(batch["terminated"]).to(self.device).unsqueeze(-1)
+        truncated = torch.FloatTensor(batch["truncated"]).to(self.device).unsqueeze(-1)
 
         q_value = self.network(state).gather(1, action)
 
@@ -74,7 +75,7 @@ class DQNAgent(SingleNetPolicy):
         next_action = torch.argmax(next_q_value, dim=1).unsqueeze(-1)
         max_next_q_value = next_q_value.gather(1, next_action)
 
-        q_target = reward + self._gamma * max_next_q_value * (1 - done)
+        q_target = reward + self._gamma * max_next_q_value * (1 - done + truncated)
 
         loss = F.mse_loss(q_value, q_target)
         self.minimize_with_clipping(self._network,self._optimizer,loss)
@@ -103,6 +104,7 @@ class DoubleDQNAgent(DQNAgent):
         reward = torch.FloatTensor(batch["rew"]).to(self.device).unsqueeze(-1)
         next_state = torch.FloatTensor(batch["obs_next"]).to(self.device)
         done = torch.FloatTensor(batch["terminated"]).to(self.device).unsqueeze(-1)
+        truncated = torch.FloatTensor(batch["truncated"]).to(self.device).unsqueeze(-1)
 
         q_value = self.network(state).gather(1, action)
 
@@ -111,7 +113,7 @@ class DoubleDQNAgent(DQNAgent):
                                    dim=1).unsqueeze(-1)
         max_next_q_value = next_q_value.gather(1, next_action)
 
-        q_target = reward + self._gamma * max_next_q_value * (1 - done)
+        q_target = reward + self._gamma * max_next_q_value * (1 - done + truncated)
 
         loss = F.mse_loss(q_value, q_target)
         self.minimize_with_clipping(self.network, self.optimizer, loss)
