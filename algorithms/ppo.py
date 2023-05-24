@@ -50,7 +50,7 @@ class PPOAgent(ACNetPolicy):
     
     def action_probabilities(self, state, legal_action_mask=None):
         with torch.no_grad():
-            obs = torch.FloatTensor(state).to(self.pi_device)
+            obs = torch.FloatTensor(state).to(self.device)
             act_prob = self.pi_net(obs).cpu().numpy()
         act_prob = self.legalize_probabilities(act_prob, legal_action_mask)
         return {act: act_prob[act] for act in range(self._num_actions)}
@@ -83,7 +83,7 @@ class PPOAgent(ACNetPolicy):
         # GAE-Lambda advantage calculation
         adv = np.zeros_like(rew)
         with torch.no_grad():
-            obs_ = torch.FloatTensor(obs).to(self.val_device)
+            obs_ = torch.FloatTensor(obs).to(self.device)
             vals = self.val_net(obs_).cpu().numpy().reshape(-1,)
             adv[:-1] = rew[:-1] - (vals[:-1] - self._gamma * vals[1:])
             adv[-1] = rew[-1]
@@ -91,8 +91,8 @@ class PPOAgent(ACNetPolicy):
         
         # computing log pi
         with torch.no_grad():
-            obs_ = torch.FloatTensor(obs).to(self.pi_device)
-            act_ = torch.LongTensor(act).to(self.pi_device)
+            obs_ = torch.FloatTensor(obs).to(self.device)
+            act_ = torch.LongTensor(act).to(self.device)
             log_p = torch.log(self.pi_net(obs_).gather(1, act_.view(-1,1)))
         
         self.dataset["obs"].extend(obs)
@@ -106,7 +106,7 @@ class PPOAgent(ACNetPolicy):
     
     def _pi_update(self):
         # no clipping or penalty
-        device = self.pi_device
+        device = self.device
         obs = torch.FloatTensor(self.dataset["obs"]).to(device)
         act = torch.LongTensor(self.dataset["act"]).to(device).unsqueeze(-1)
         adv = torch.FloatTensor(self.dataset["adv"]).to(device).unsqueeze(-1)
@@ -137,8 +137,8 @@ class PPOAgent(ACNetPolicy):
          
     
     def _val_update(self):
-        obs = torch.FloatTensor(self.dataset["obs"]).to(self.val_device)
-        ret = torch.FloatTensor(self.dataset["return"]).to(self.val_device).unsqueeze(-1)
+        obs = torch.FloatTensor(self.dataset["obs"]).to(self.device)
+        ret = torch.FloatTensor(self.dataset["return"]).to(self.device).unsqueeze(-1)
         
         val = self.val_net(obs)
         loss = F.mse_loss(val, ret)

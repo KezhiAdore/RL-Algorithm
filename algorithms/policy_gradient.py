@@ -64,7 +64,7 @@ class PolicyGradientAgent(ACNetPolicy):
         
         adv = np.zeros_like(rew)
         with torch.no_grad():
-            obs_ = torch.FloatTensor(obs).to(self.val_device)
+            obs_ = torch.FloatTensor(obs).to(self.device)
             vals = self.val_net(obs_).cpu().numpy().reshape(-1,)
             adv[:-1] = rew[:-1] - (vals[:-1] - self._gamma * vals[1:])
             adv[-1] = rew[-1]
@@ -79,9 +79,9 @@ class PolicyGradientAgent(ACNetPolicy):
         self.dataset["adv"].extend(adv)
 
     def _pi_update(self):
-        obs = torch.FloatTensor(np.array(self.dataset["obs"])).to(self.pi_device)
-        act = torch.LongTensor(self.dataset["act"]).view(-1,1).to(self.pi_device)
-        adv = torch.FloatTensor(self.dataset["adv"]).view(-1,1).to(self.pi_device)
+        obs = torch.FloatTensor(np.array(self.dataset["obs"])).to(self.device)
+        act = torch.LongTensor(self.dataset["act"]).view(-1,1).to(self.device)
+        adv = torch.FloatTensor(self.dataset["adv"]).view(-1,1).to(self.device)
 
         act_prob = self.pi_net(obs)
             
@@ -91,8 +91,8 @@ class PolicyGradientAgent(ACNetPolicy):
         return loss.item()
 
     def _val_update(self):
-        obs = torch.FloatTensor(self.dataset["obs"]).to(self.val_device)
-        ret = torch.FloatTensor(self.dataset["return"]).to(self.val_device)
+        obs = torch.FloatTensor(self.dataset["obs"]).to(self.device)
+        ret = torch.FloatTensor(self.dataset["return"]).to(self.device)
 
         # 计算loss
         value = self.val_net(obs)

@@ -285,6 +285,9 @@ class ACNetPolicy(SingleNetPolicy):
         self._v_optimizer = v_optimizer
         self._v_update_num = v_update_num
         self._pi_update_num = pi_update_num
+        
+        # make sure the parameters of the two networks are on the same device
+        assert next(self._network.parameters()).device == next(self._v_net.parameters()).device
     
     @property
     def pi_net(self):
@@ -299,7 +302,7 @@ class ACNetPolicy(SingleNetPolicy):
         return self._pi_update_num
     
     @property
-    def pi_device(self):
+    def device(self):
         return next(self._network.parameters()).device
     
     @property
@@ -313,9 +316,5 @@ class ACNetPolicy(SingleNetPolicy):
     @property
     def val_update_num(self):
         return self._v_update_num
-    
-    @property
-    def val_device(self):
-        return next(self._v_net.parameters()).device
         
         

@@ -19,8 +19,8 @@ class ReinforceAgent(SingleNetPolicy):
                  buffer_size: int = 1000000, 
                  max_global_gradient_norm: float = None, 
                  log_name: str = ""):
-        super().__init__(player_id, num_actions, network, optimizer, update_num, 
-                         gamma, buffer_size, max_global_gradient_norm, log_name)
+        super().__init__(player_id, num_actions, network, optimizer, gamma, 
+                         buffer_size, max_global_gradient_norm, log_name)
     
     def action_probabilities(self, state, legal_action_mask=None):
         if legal_action_mask is None:
